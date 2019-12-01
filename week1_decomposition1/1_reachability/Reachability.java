@@ -1,12 +1,31 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Queue;
+import java.util.LinkedList;
 
 public class Reachability {
     private static int reach(ArrayList<Integer>[] adj, int x, int y) {
-        //write your code here
+        Queue<Integer> queue = new LinkedList<>();
+        boolean[] marked = new boolean[adj.length];
+        
+        queue.add(x);
+        marked[x] = true;
+
+        while( !queue.isEmpty() ) {
+            int current = queue.remove();
+            if(current == y) {
+                return 1;
+            }
+            for(int neighbour : adj[current]) {
+                if( !marked[neighbour] ) {
+                    queue.add(neighbour);
+                    marked[neighbour] = true;
+                }
+            }
+        }
+
         return 0;
     }
-
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);

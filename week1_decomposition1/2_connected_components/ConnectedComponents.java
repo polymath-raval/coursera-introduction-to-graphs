@@ -1,11 +1,40 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Queue;
+import java.util.LinkedList;
 
 public class ConnectedComponents {
     private static int numberOfComponents(ArrayList<Integer>[] adj) {
-        int result = 0;
-        //write your code here
-        return result;
+        int captionOfComponent = 0;
+        boolean[] visited = new boolean[adj.length];
+
+        for(int vertex = 0; vertex < adj.length; vertex++) {
+            if( !visited[vertex] ) {
+                captionOfComponent++;
+                visited[vertex] = true;
+                
+                /** 
+                 * Breadth first search on the node
+                 * All the strongly connected components of the node will
+                 * marked as belonging to that component and
+                 * then they will be ignored
+                 */
+                Queue<Integer> queue = new LinkedList<>();
+                queue.add(vertex);
+                visited[vertex] = true;
+                while( !queue.isEmpty() ) {
+                    int current = queue.remove();
+                    for( int neighbour : adj[current] ) {
+                        if (!visited[neighbour] ) {
+                            queue.add(neighbour);
+                            visited[neighbour] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return captionOfComponent;
     }
 
     public static void main(String[] args) {

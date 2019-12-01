@@ -1,12 +1,26 @@
 #Uses python3
 
 import sys
-
+import queue
 
 def number_of_components(adj):
-    result = 0
-    #write your code here
-    return result
+    captionOfConnectedComponents = 0
+    visited = [False] * len(adj)
+    
+    for vertex in range(0, len(adj)):
+        if not visited[vertex]:
+            captionOfConnectedComponents = captionOfConnectedComponents + 1
+            q = queue.Queue(maxsize = len(adj))
+            q.put(vertex)
+            visited[vertex] = True
+            while not q.empty():
+                current = q.get()
+                for neighbour in adj[current]:
+                    if not visited[neighbour]:
+                        q.put(neighbour)
+                        visited[neighbour] = True
+
+    return captionOfConnectedComponents
 
 if __name__ == '__main__':
     input = sys.stdin.read()
