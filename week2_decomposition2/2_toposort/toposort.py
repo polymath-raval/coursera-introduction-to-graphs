@@ -2,15 +2,26 @@
 
 import sys
 
-def dfs(adj, used, order, x):
-    #write your code here
-    pass
+def dfs(adj, visited, order, vertex):
+    if not visited[vertex]:
+        visited[vertex] = True
+        for neighbour in adj[vertex]:
+            dfs(adj, visited, order, neighbour)
+        order.append(vertex)
 
+def reverse(adj):
+    reverse =  [[] for _ in range(len(adj))]
+    for vertex in range(len(adj)):
+        for neighbour in adj[vertex]:
+            reverse[neighbour].append(vertex)
+    return reverse
 
 def toposort(adj):
-    used = [0] * len(adj)
+    adj = reverse(adj)
+    visited = [False] * len(adj)
     order = []
-    #write your code here
+    for vertex in range(len(adj)):
+        dfs(adj, visited, order, vertex)
     return order
 
 if __name__ == '__main__':

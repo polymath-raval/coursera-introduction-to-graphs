@@ -1,10 +1,28 @@
 #Uses python3
 
 import sys
-
+from queue import Queue
 
 def acyclic(adj):
+    for vertex in range(len(adj)):
+        if bfs(adj, vertex):
+            return 1
     return 0
+
+def bfs(adj, vertex):
+    q = Queue()
+    visited = [False] * len(adj)
+    q.put(vertex)
+    visited[vertex] = True
+    while not q.empty():
+        current = q.get()
+        for neighbour in adj[current]:
+            if neighbour == vertex:
+                return True
+            if not visited[neighbour]:
+                visited[neighbour] = True
+                q.put(neighbour)
+    return False
 
 if __name__ == '__main__':
     input = sys.stdin.read()
