@@ -5,8 +5,28 @@ import java.util.Scanner;
 
 public class Bipartite {
     private static int bipartite(ArrayList<Integer>[] adj) {
-        //write your code here
-        return -1;
+        int[] parts = new int[adj.length];
+        for(int i = 0; i < parts.length; i++) {
+            parts[i] = -1;
+        }
+        Queue<Integer> q = new LinkedList<>();
+        boolean[] visited = new boolean[adj.length];
+        q.add(0);
+        parts[0] = 0;
+        visited[0] = true;
+        while( !q.isEmpty() ) {
+            int current = q.remove();
+            for(int neighbour : adj[current]) {
+                if(parts[neighbour] == parts[current]) {
+                    return 0;
+                } else if( !visited[neighbour] ) {
+                    parts[neighbour] = (parts[current] + 1) % 2;
+                    visited[neighbour] = true;
+                    q.add(neighbour);
+                }
+            }
+        }
+        return 1;
     }
 
     public static void main(String[] args) {
