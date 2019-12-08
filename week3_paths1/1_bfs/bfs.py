@@ -4,8 +4,21 @@ import sys
 import queue
 
 def distance(adj, s, t):
-    #write your code here
-    return -1
+    distance_table = [sys.maxsize] * len(adj)
+    distance_table[s] = 0
+    q = queue.Queue()
+    q.put(s)
+    while not q.empty():
+        current = q.get()
+        for neighbour in adj[current]:
+            if distance_table[neighbour] > distance_table[current] + 1:
+                distance_table[neighbour] = distance_table[current] + 1
+                q.put(neighbour)
+
+    if distance_table[t] == sys.maxsize:
+        return -1
+    else:
+        return distance_table[t]
 
 if __name__ == '__main__':
     input = sys.stdin.read()

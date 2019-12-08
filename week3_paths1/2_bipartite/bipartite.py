@@ -4,8 +4,19 @@ import sys
 import queue
 
 def bipartite(adj):
-    #write your code here
-    return -1
+    parts = [-1] * len(adj)
+    q = queue.Queue()
+    q.put(0)
+    parts[0] = 0
+    while not q.empty():
+        current = q.get()
+        for neighbour in adj[current]:
+            if parts[current] == parts[neighbour]:
+                return 0
+            elif parts[neighbour] == -1:
+                parts[neighbour] = (parts[current] + 1) % 2
+                q.put(neighbour)
+    return 1
 
 if __name__ == '__main__':
     input = sys.stdin.read()
