@@ -2,7 +2,55 @@ import java.util.*;
 
 public class Dijkstra {
     private static int distance(ArrayList<Integer>[] adj, ArrayList<Integer>[] cost, int s, int t) {
-        return -1;
+        int[] distanceMatrix = new int[adj.length];
+        for(int i = 0; i < distanceMatrix.length; i++)
+            distanceMatrix[i] = Integer.MAX_VALUE;
+
+        PriorityQueue<Node> minHeap = createQueue(adj, cost, s);
+        while(!minHeap.isEmpty()) {
+            Node node = minHeap.remove();
+            if(distanceMatrix[node.vertex] > node.distance) {
+                distanceMatrix[node.vertex] = node.distance;
+                for(int i = 0; i < node.neighbours.size(); i++) {
+                    int neighbourVertex = node.neighbours.get(i);
+                    minHeap.add(new Node(neighbourVertex, 
+                                    adj[neighbourVertex], 
+                                    cost[neighbourVertex], 
+                                    node.cost.get(i) + node.distance));
+                }
+            }
+        }
+        //System.out.printf("distance matrix : %s\n", Arrays.toString(distanceMatrix));
+        return distanceMatrix[t] == Integer.MAX_VALUE ? -1 : distanceMatrix[t];
+    
+    }
+
+    private static PriorityQueue<Node> createQueue(ArrayList<Integer>[] adj, 
+        ArrayList<Integer>[] cost, int s) {
+        PriorityQueue<Node> minHeap = new PriorityQueue<>();
+        for(int i = 0; i < adj.length; i++) {
+            minHeap.add(new Node(i, adj[i], cost[i], Integer.MAX_VALUE));
+        }
+        minHeap.add(new Node(s, adj[s], cost[s], 0));
+        return minHeap;
+    }
+
+    private static class Node implements Comparable<Node>{
+        public final int vertex;
+        public final ArrayList<Integer> neighbours;
+        public final ArrayList<Integer> cost;
+        public final int distance;
+
+        Node(int vertex, ArrayList<Integer> neighbours, ArrayList<Integer> cost, int distance) {
+            this.vertex = vertex;
+            this.neighbours = neighbours;
+            this.cost = cost;
+            this.distance = distance;
+        }
+
+        public int compareTo(Node other){
+            return Integer.compare(this.distance, other.distance);
+        }
     }
 
     public static void main(String[] args) {
