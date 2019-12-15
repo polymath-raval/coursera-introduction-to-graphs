@@ -1,110 +1,162 @@
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class FriendSuggestion {
-    private static class Impl {
-        // Number of nodes
-        int n;
-        // adj[0] and cost[0] store the initial graph, adj[1] and cost[1] store the reversed graph.
-        // Each graph is stored as array of adjacency lists for each node. adj stores the edges,
-        // and cost stores their costs.
-        ArrayList<Integer>[][] adj;
-        ArrayList<Integer>[][] cost;
-        // distance[0] and distance[1] correspond to distance estimates in the forward and backward searches.
-        Long[][] distance;
-        // Two priority queues, one for forward and one for backward search.
-        ArrayList<PriorityQueue<Entry>> queue;
-        // visited[v] == true iff v was visited either by forward or backward search.
-        boolean[] visited;
-        // List of all the nodes which were visited either by forward or backward search.
-        ArrayList<Integer> workset;
-        final Long INFINITY = Long.MAX_VALUE / 4;
+    private static class Node implements Comparable<Node>{
+        int previousVertex;
+        int vertex;
+        int distance;
 
-        Impl(int n) {
-            this.n = n;
-            visited = new boolean[n];
-            Arrays.fill(visited, false);
-            workset = new ArrayList<Integer>();
-            distance = new Long[][] {new Long[n], new Long[n]};
-            for (int i = 0; i < n; ++i) {
-                distance[0][i] = distance[1][i] = INFINITY;
-            }
-            queue = new ArrayList<PriorityQueue<Entry>>();
-            queue.add(new PriorityQueue<Entry>(n));
-            queue.add(new PriorityQueue<Entry>(n));
+        public Node(int p, int v, int d) {
+            this.previousVertex = p;
+            this.vertex = v;
+            this.distance = d;
         }
 
-        // Reinitialize the data structures before new query after the previous query
-        void clear() {
-            for (int v : workset) {
-                distance[0][v] = distance[1][v] = INFINITY;
-                visited[v] = false;
-            }
-            workset.clear();
-            queue.get(0).clear();
-            queue.get(1).clear();
+        public int compareTo(Node other) {
+            return Integer.compare(this.distance, other.distance);
         }
 
-        // Try to relax the distance from direction side to node v using value dist.
-        void visit(int side, int v, Long dist) {
-            // Implement this method yourself
-        }
-
-        // Returns the distance from s to t in the graph.
-        Long query(int s, int t) {
-            clear();
-            visit(0, s, 0L);
-            visit(1, t, 0L);
-            // Implement the rest of the algorithm yourself
- 
-            return -1L;
-        }
-
-        class Entry implements Comparable<Entry>
-        {
-            Long cost;
-            int node;
-          
-            public Entry(Long cost, int node)
-            {
-                this.cost = cost;
-                this.node = node;
-            }
-         
-            public int compareTo(Entry other)
-            {
-                return cost < other.cost ? -1 : cost > other.cost ? 1 : 0;
-            }
+        public String toString() {
+            return String.format("{p: [%d], v: [%d], d: [%d]}", this.previousVertex, this.vertex, this. distance);
         }
     }
+
+    private static class Graph {
+        int numberOfNodes;
+        ArrayList<Integer>[] adj;
+        ArrayList<Integer>[] cost;
+
+        public Graph(int n){
+            this.numberOfNodes = n;
+            this.adj = (ArrayList<Integer>[])new ArrayList[n];
+            this.cost = (ArrayList<Integer>[])new ArrayList[n];
+            for(int i = 0; i < n; i++) {
+                this.adj[i] = new ArrayList<Integer>();
+                this.cost[i] = new ArrayList<Integer>();
+            }          
+        }
+    }
+
+    private static class BiDirectionalDijkstra {
+        Graph graph;
+        Graph rGraph;
+        int source;
+        int target;
+        Node[] visited;
+        Node[] rVisited;
+        PriorityQueue<Node> queue;
+        PriorityQueue<Node> rQueue;
+
+
+        BiDirectionalDijkstra(Graph g, Graph rG, int s, int t) {
+            this.graph = g;
+            this.rGraph = rG;
+            this.source = s;
+            this.target = t;
+            this.visited = new Node[this.graph.numberOfNodes];
+            this.rVisited = new Node[this.rGraph.numberOfNodes];
+            this.queue = new PriorityQueue<>();
+            this.rQueue = new PriorityQueue<>();
+            this.queue.add(new Node(s, s, 0));
+            this.rQueue.add(new Node(t, t, 0));
+        }
+
+        private static Node relaxNode(PriorityQueue<Node> q, Node[] v, Graph g) {
+            Node node = q.remove();
+            int vertex = node.vertex;
+            v[vertex] = node;
+            for(int i = 0; i < g.adj[vertex].size(); i++) {
+                int neighbourVertex = g.adj[vertex].get(i);
+                int neighbourCost = g.cost[vertex].get(i);
+                if(v[neighbourVertex] == null 
+                    || v[neighbourVertex].distance > node.distance + neighbourCost) {
+                    q.add(new Node(vertex, neighbourVertex, node.distance + neighbourCost));
+                }
+            }
+            return node;
+        }
+
+        int optimalPath(int intersectionVertex) {
+            if(intersectionVertex == -1){
+                return -1;
+            }
+
+            int edgeVertex = intersectionVertex;
+            int rEdgeVertex = intersectionVertex;
+            int minimumCost = visited[edgeVertex].distance + rVisited[rEdgeVertex].distance;
+            //System.out.printf("{e: %d, r: %d, m: %d}\n", edgeVertex, rEdgeVertex, minimumCost);
+            for(int vertex = 0; vertex < visited.length; vertex++) {
+                if(visited[vertex] != null) {
+                    for(int j = 0; j < graph.adj[vertex].size(); j++) {
+                        int neighbourVertex = graph.adj[vertex].get(j);
+                        if(rVisited[neighbourVertex] != null) {
+                            int proposedCost = visited[vertex].distance 
+                                                + graph.cost[vertex].get(j)
+                                                + rVisited[neighbourVertex].distance;
+
+                            //System.out.printf("{e: %d, r: %d, m: %d}\n", vertex, neighbourVertex, proposedCost);
+
+                            if(minimumCost > proposedCost) {
+                                edgeVertex = vertex;
+                                rEdgeVertex = neighbourVertex;
+                                minimumCost = proposedCost;
+                            }
+                        }
+                    }
+                }
+            }
+            return minimumCost;
+        }
+
+        int traverse() {
+            
+            int intersectionPoint = -1;
+            //System.out.printf("visited: %s\n rVisited: %s\n\n", Arrays.toString(visited), Arrays.toString(rVisited));            
+                
+            while(!this.queue.isEmpty() && !this.rQueue.isEmpty()) {
+                    
+                if(!this.queue.isEmpty()) {
+                    Node node = relaxNode(this.queue, this.visited, this.graph);
+                    //System.out.printf("visited: %s\n rVisited: %s\n\n", Arrays.toString(visited), Arrays.toString(rVisited));
+                    if(rVisited[node.vertex] != null) {
+                        intersectionPoint = node.vertex;
+                        break;
+                    }
+                }
+                if(!this.rQueue.isEmpty()) {
+                    Node node = relaxNode(this.rQueue, this.rVisited, this.rGraph);        
+                    //System.out.printf("visited: %s\n rVisited: %s\n\n", Arrays.toString(visited), Arrays.toString(rVisited));
+                    if(visited[node.vertex] != null) {
+                        intersectionPoint = node.vertex;
+                        break;
+                    }
+                }
+
+            }
+            //System.out.printf("intersectionPoint: %d\n", intersectionPoint);
+            //System.out.printf("visited: %s\n rVisited: %s\n\n", Arrays.toString(visited), Arrays.toString(rVisited));
+            return optimalPath(intersectionPoint);
+        }
+
+    }
+
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
         int n = in.nextInt();
         int m = in.nextInt();
-        Impl bidij = new Impl(n);
-        bidij.adj = (ArrayList<Integer>[][])new ArrayList[2][];
-        bidij.cost = (ArrayList<Integer>[][])new ArrayList[2][];
-        for (int side = 0; side < 2; ++side) {
-            bidij.adj[side] = (ArrayList<Integer>[])new ArrayList[n];
-            bidij.cost[side] = (ArrayList<Integer>[])new ArrayList[n];
-            for (int i = 0; i < n; i++) {
-                bidij.adj[side][i] = new ArrayList<Integer>();
-                bidij.cost[side][i] = new ArrayList<Integer>();
-            }
-        }
+        Graph graph = new Graph(n);
+        Graph rGraph = new Graph(n);
 
         for (int i = 0; i < m; i++) {
             int x, y, c;
             x = in.nextInt();
             y = in.nextInt();
             c = in.nextInt();
-            bidij.adj[0][x - 1].add(y - 1);
-            bidij.cost[0][x - 1].add(c);
-            bidij.adj[1][y - 1].add(x - 1);
-            bidij.cost[1][y - 1].add(c);
+            graph.adj[x -1].add(y - 1);
+            graph.cost[x - 1].add(c);
+            rGraph.adj[y - 1].add(x - 1);
+            rGraph.cost[y - 1].add(c);
         }
 
         int t = in.nextInt();
@@ -113,7 +165,12 @@ public class FriendSuggestion {
             int u, v;
             u = in.nextInt();
             v = in.nextInt();
-            System.out.println(bidij.query(u-1, v-1));
+            System.out.println(new BiDirectionalDijkstra(graph, rGraph, u - 1, v - 1).traverse());
         }
     }
+
+
+
+
+    
 }
